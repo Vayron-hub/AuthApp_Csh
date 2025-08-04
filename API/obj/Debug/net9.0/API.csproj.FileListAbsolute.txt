@@ -164,3 +164,5 @@ C:\Users\vayro\OneDrive\Escritorio\8VO\9NO\Desarrollo_WEB_integral\jwtAuth\API\o
 C:\Users\vayro\OneDrive\Escritorio\8VO\9NO\Desarrollo_WEB_integral\jwtAuth\API\obj\Debug\net9.0\API.pdb
 C:\Users\vayro\OneDrive\Escritorio\8VO\9NO\Desarrollo_WEB_integral\jwtAuth\API\obj\Debug\net9.0\API.genruntimeconfig.cache
 C:\Users\vayro\OneDrive\Escritorio\8VO\9NO\Desarrollo_WEB_integral\jwtAuth\API\obj\Debug\net9.0\ref\API.dll
+C:\Users\vayro\OneDrive\Escritorio\8VO\9NO\Desarrollo_WEB_integral\jwtAuth\API\obj\Debug\net9.0\API.sourcelink.json
+C:\Users\vayro\OneDrive\Escritorio\8VO\9NO\Desarrollo_WEB_integral\jwtAuth\API\bin\Debug\net9.0\RestSharp.dll
