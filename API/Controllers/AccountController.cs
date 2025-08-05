@@ -14,7 +14,6 @@ using RestSharp;
 
 namespace API.Controllers
 {
-    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class AccountController:ControllerBase
@@ -193,10 +192,28 @@ namespace API.Controllers
         [HttpPost("forgot-password")]
         public async Task<ActionResult> ForgotPassword(ForgotPasswordDto forgotPasswordDto)
         {
+            Console.WriteLine($"🔍 Forgot password request received for email: {forgotPasswordDto?.Email}");
+            
+            if (forgotPasswordDto == null || !ModelState.IsValid)
+            {
+                Console.WriteLine("❌ ModelState is invalid or DTO is null");
+                foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    Console.WriteLine($"❌ Validation error: {error.ErrorMessage}");
+                }
+                return BadRequest(new AuthResponseDto
+                {
+                    IsSuccess = false,
+                    Message = "Invalid email format or missing email"
+                });
+            }
+
             var user = await _userManager.FindByEmailAsync(forgotPasswordDto.Email);
+            Console.WriteLine($"🔍 User found: {user != null}");
 
             if (user is null)
             {
+                Console.WriteLine($"❌ User not found with email: {forgotPasswordDto.Email}");
                 return Ok(new AuthResponseDto
                 {
                     IsSuccess = false,
@@ -206,6 +223,7 @@ namespace API.Controllers
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             var resetLink = $"http://localhost:4200/reset-password?email={user.Email}&token={WebUtility.UrlEncode(token)}";
+            Console.WriteLine($"🔗 Reset link generated: {resetLink}");
 
             var client = new RestClient("https://send.api.mailtrap.io/api/send");
 
@@ -215,19 +233,31 @@ namespace API.Controllers
                 RequestFormat = DataFormat.Json
             };
 
-            request.AddHeader("Authorization", "Bearer 62a57db5c125073400f28db0b418c6d0");
+            var apiToken = _configuration.GetSection("MailtrapSettings").GetSection("ApiToken").Value;
+            var templateUuid = _configuration.GetSection("MailtrapSettings").GetSection("TemplateUuid").Value;
+            var fromEmail = _configuration.GetSection("MailtrapSettings").GetSection("FromEmail").Value;
+
+            Console.WriteLine($"🔧 Using API Token: {apiToken?.Substring(0, 8)}...");
+            Console.WriteLine($"🔧 Using Template UUID: {templateUuid}");
+            Console.WriteLine($"🔧 Using From Email: {fromEmail}");
+
+            request.AddHeader("Authorization", $"Bearer {apiToken}");
             request.AddJsonBody(new
             {
-                from = new { email = "mailtrap@demomailtrap.com" },
+                from = new { email = fromEmail },
                 to = new[] { new { email = user.Email } },
-                template_uuid = "b8bd784f-961a-4c6f-bdcd-fbddfc8ceabe",
+                template_uuid = templateUuid,
                 template_variables = new { user_email = user.Email, pass_reset_link = resetLink }
             });
 
+            Console.WriteLine("📧 Sending email via Mailtrap...");
             var response = client.Execute(request);
+            Console.WriteLine($"📧 Mailtrap response status: {response.StatusCode}");
+            Console.WriteLine($"📧 Mailtrap response content: {response.Content}");
 
             if (response.IsSuccessful)
             {
+                Console.WriteLine("✅ Email sent successfully");
                 return Ok(new AuthResponseDto
                 {
                     IsSuccess = true,
@@ -236,6 +266,7 @@ namespace API.Controllers
             }
             else
             {
+                Console.WriteLine($"❌ Email failed to send: {response.Content}");
                 return BadRequest(new AuthResponseDto
                 {
                     IsSuccess = false,
@@ -282,6 +313,7 @@ namespace API.Controllers
         }
 
 
+        [Authorize]
         [HttpPost("change-password")]
         public async Task<ActionResult> ChangePassword(ChangePasswordDto changePasswordDto)
         {
@@ -368,6 +400,7 @@ namespace API.Controllers
         }
 
         //api/account/detail
+        [Authorize]
         [HttpGet("detail")]
         public async Task<ActionResult<UserDetailDto>> GetUserDetail()
         {
@@ -397,6 +430,7 @@ namespace API.Controllers
         }
 
 
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserDetailDto>>> GetUsers()
         {

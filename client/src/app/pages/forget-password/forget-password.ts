@@ -20,9 +20,11 @@ export class ForgetPasswordComponent {
   isSubmitting = false;
 
   forgetPassword() {
+    console.log('🔍 Sending forgot password request for email:', this.email);
     this.isSubmitting = true;
     this.authService.forgotPassword(this.email).subscribe({
       next: (response) => {
+        console.log('✅ Forgot password response:', response);
         if (response.isSuccess) {
           this.matSnackbar.open(response.message, 'Close', {
             duration: 5000,
@@ -35,7 +37,9 @@ export class ForgetPasswordComponent {
         }
       },
       error: (error: HttpErrorResponse) => {
-        this.matSnackbar.open(error.message, 'Close', {
+        console.error('❌ Forgot password error:', error);
+        console.error('❌ Error details:', error.error);
+        this.matSnackbar.open(error.error?.message || error.message, 'Close', {
           duration: 5000,
         });
       },
